@@ -98,10 +98,9 @@ unsigned int CreateShader(std::string& _vertex_shader_, std::string& _fragment_s
 
 int main()
 {
-	//ToggleConsole();
-
 	glfwInit();
-	GLFWwindow* window = glfwCreateWindow(500, 500, "Opengl with imgui", NULL, NULL);
+	//const char* title = "Advance Graphics Engine %s", glGetString(GL_VERSION);
+	GLFWwindow* window = glfwCreateWindow(500, 500, "Advance Graphics Engine v0.0.1a", NULL, NULL);
 	glfwMakeContextCurrent(window);
 	glfwSwapInterval(1);
 
@@ -115,14 +114,11 @@ int main()
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 	io.FontDefault = io.Fonts->AddFontFromFileTTF("res/fonts/Tillana-Regular.ttf", 21.0f);
 
-	/*std::cout << "Manufacturer : " << glGetString(GL_VENDOR) << std::endl;
-	std::cout << "Renderer : " << glGetString(GL_RENDERER) << std::endl;
-	std::cout << "Version : " << glGetString(GL_VERSION) << std::endl;*/
-
 	float vertices[] = {
-			 0.0f, 0.5f, 0.0f,
-			 0.5f,-0.5f, 0.0f,
-			-0.5f,-0.5f, 0.0f
+		//coordinate			//colors			//texture coordinate
+		 0.0f, 0.5f, 0.0f,		1.0f, 0.0f,	0.0f,	  0.0f, 0.5f,
+		 0.5f,-0.5f, 0.0f,		0.0f, 1.0f,	0.0f,	  0.5f,-0.5f,
+		-0.5f,-0.5f, 0.0f,		0.0f, 0.0f,	1.0f,	 -0.5f,-0.5f,
 	};
 
 	int indices[] = {
@@ -132,9 +128,18 @@ int main()
 	unsigned int vertexBuffer;
 	glGenBuffers(1, &vertexBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 9, vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8 * 3, vertices, GL_STATIC_DRAW);
+
+	//Attribute pointer
+	//position attribute
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 8, 0);
+	//Color Attribute
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 8, (void*)(3 * sizeof(float)));
+	//texture coordinate Attribute
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 8, (void*)(6 * sizeof(float)));
 
 	unsigned int indexBuffer;
 	glGenBuffers(1, &indexBuffer);
@@ -161,8 +166,8 @@ int main()
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
+		//ImGui::DockSpaceOverViewport();
 
-		ImGui::DockSpaceOverViewport();
 
 		if (draw)
 		{
@@ -257,6 +262,9 @@ int main()
 		ImGui::End();
 
 		ImGui::Begin("Statistics");
+		ImGui::Text("Manufacturer : %s", glGetString(GL_VENDOR));
+		ImGui::Text("Renderer : %s", glGetString(GL_RENDERER));
+		ImGui::Text("Version : %s", glGetString(GL_VERSION));
 		ImGui::Text("Time Elapsed : %f", glfwGetTime());
 		//ImGui::Text("Delta Time : %f", io.DeltaTime);
 		ImGui::Text("Frame Rate : %f", io.Framerate);
