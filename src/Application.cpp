@@ -14,9 +14,6 @@
 
 #include<glm/vec3.hpp>
 
-#pragma region GlobalDeclarations
-bool isConsoleEnabled = true;
-#pragma endregion
 
 struct ShaderSource
 {
@@ -99,8 +96,7 @@ unsigned int CreateShader(std::string& _vertex_shader_, std::string& _fragment_s
 int main()
 {
 	glfwInit();
-	//const char* title = "Advance Graphics Engine %s", glGetString(GL_VERSION);
-	GLFWwindow* window = glfwCreateWindow(500, 500, "Advance Graphics Engine v0.0.1a", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(800, 600, "Advance Graphics Engine v0.0.1", NULL, NULL);
 	glfwMakeContextCurrent(window);
 	glfwSwapInterval(1);
 
@@ -115,20 +111,26 @@ int main()
 	io.FontDefault = io.Fonts->AddFontFromFileTTF("res/fonts/Tillana-Regular.ttf", 21.0f);
 
 	float vertices[] = {
-		//coordinate			//colors			//texture coordinate
-		 0.0f, 0.5f, 0.0f,		1.0f, 0.0f,	0.0f,	  0.0f, 0.5f,
-		 0.5f,-0.5f, 0.0f,		0.0f, 1.0f,	0.0f,	  0.5f,-0.5f,
-		-0.5f,-0.5f, 0.0f,		0.0f, 0.0f,	1.0f,	 -0.5f,-0.5f,
+		//coordinate			//colors				//texture coordinate
+		-0.5f, 0.5f, 1.0f,		1.0f, 0.0f,	0.0f,		0.0f, 1.0f,
+		 0.5f, 0.5f, 0.0f,		1.0f, 0.0f,	0.0f,		1.0f, 1.0f,
+		 0.5f,-0.5f, 1.0f,		0.0f, 0.0f,	1.0f,		1.0f, 0.0f,
+		-0.5f,-0.5f, 0.0f,		0.0f, 0.0f,	1.0f,		0.0f, 0.0f
 	};
 
 	int indices[] = {
-		0,1,2
+		0,1,2,3
 	};
 
 	unsigned int vertexBuffer;
 	glGenBuffers(1, &vertexBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8 * 3, vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8 * 4, vertices, GL_STATIC_DRAW);
+
+	unsigned int indexBuffer;
+	glGenBuffers(1, &indexBuffer);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * 4, indices, GL_STATIC_DRAW);
 
 	//Attribute pointer
 	//position attribute
@@ -140,11 +142,49 @@ int main()
 	//texture coordinate Attribute
 	glEnableVertexAttribArray(2);
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 8, (void*)(6 * sizeof(float)));
+	//texture
+	unsigned int texture1;
+	glGenTextures(1, &texture1);
+	glBindTexture(GL_TEXTURE_2D, texture1);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	//Load texture
+	int width, height, nChannels;
+	stbi_set_flip_vertically_on_load(true);
+	unsigned char* data = stbi_load("res/images/Doge.png", &width, &height, &nChannels, 0);
+	if (data)
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else {
+		std::cout << "Image not loaded" << std::endl;
+	}
+	stbi_image_free(data);
 
-	unsigned int indexBuffer;
-	glGenBuffers(1, &indexBuffer);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * 3, indices, GL_STATIC_DRAW);
+#pragma region FrameBuffer
+	/*
+	unsigned int frameBuffer;
+	glGenBuffers(1, &frameBuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+
+	unsigned int frameBufferTexture;
+	glGenBuffers(1, &frameBufferTexture);
+	glBindTexture(GL_FRAMEBUFFER, frameBufferTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+	unsigned int renderBuffer;
+	glGenBuffers(1, &renderBuffer);
+	glBindRenderbuffer(GL_RENDERBUFFER, renderBuffer);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+	*/
+#pragma endregion
 
 	ShaderSource shaderSource = ParseShader("src/shaders/shader.shad");
 
@@ -155,6 +195,7 @@ int main()
 	glUniform3f(location, 0.1f, 0.1f, 0.1f);
 
 	bool draw = true;
+	bool dockOverViewport = true;
 	float triangleColor[3] = { 1.0f,1.0f, 1.0f };
 	float backgroundColor[3] = { 25.0f / 255.0f,25.0f / 255.0f, 25.0f / 255.0f };
 
@@ -163,21 +204,25 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT);
 		glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], 1.0f);
 
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texture1);
+
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
-		//ImGui::DockSpaceOverViewport();
 
-
+		if (dockOverViewport)
+			ImGui::DockSpaceOverViewport();
 		if (draw)
 		{
 			glUniform3f(location, triangleColor[0], triangleColor[1], triangleColor[2]);
-			glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, nullptr);
+			glDrawElements(GL_POLYGON, 4, GL_UNSIGNED_INT, nullptr);
 		}
 
 		if (ImGui::BeginMainMenuBar())
 		{
 			if (ImGui::BeginMenu("File")) {
+				ImGui::MenuItem("Open");
 				ImGui::MenuItem("New");
 				ImGui::MenuItem("Save");
 				ImGui::MenuItem("Save as");
@@ -187,10 +232,8 @@ int main()
 				ImGui::EndMenu();
 			}
 
-			if (ImGui::BeginMenu("Window")) {
-
-				/*if (ImGui::MenuItem("Toggle System Window"))
-					ToggleConsole();*/
+			if (ImGui::BeginMenu("Window"))
+			{
 				ImGui::EndMenu();
 			}
 
@@ -213,14 +256,18 @@ int main()
 
 			if (ImGui::BeginMenu("Help")) {
 				ImGui::MenuItem("Documentation");
-				if (ImGui::MenuItem("About"))
-				{
-					/*ImGui::OpenPopup("Helo");*/
-				}
+				ImGui::MenuItem("About");
 				ImGui::EndMenu();
 			}
 			ImGui::EndMainMenuBar();
 		}
+		
+
+		
+		ImGui::Begin("Viewport");
+		ImVec2 viewSize = ImGui::GetContentRegionAvail();
+		ImGui::Text("X : %f\nY : %f", viewSize.x, viewSize.y);
+		ImGui::End();
 
 		ImGui::Begin("Add Menu");
 		if (ImGui::BeginMenu("Mesh"))
@@ -257,7 +304,7 @@ int main()
 		ImGui::End();
 
 		ImGui::Begin("Property");
-		ImGui::ColorEdit3("Triangle Color", triangleColor, 1);
+		ImGui::ColorEdit3("Triangle Color", triangleColor);
 		ImGui::ColorEdit3("Background Color", backgroundColor);
 		ImGui::End();
 
@@ -266,7 +313,6 @@ int main()
 		ImGui::Text("Renderer : %s", glGetString(GL_RENDERER));
 		ImGui::Text("Version : %s", glGetString(GL_VERSION));
 		ImGui::Text("Time Elapsed : %f", glfwGetTime());
-		//ImGui::Text("Delta Time : %f", io.DeltaTime);
 		ImGui::Text("Frame Rate : %f", io.Framerate);
 		ImGui::End();
 
@@ -276,12 +322,15 @@ int main()
 
 		ImGui::Begin("Scene");
 		ImGui::Checkbox("Render", &draw);
+		ImGui::Checkbox("Dockspace over viewport", &dockOverViewport);
 		ImGui::End();
+		
 
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		glfwPollEvents();
 		glfwSwapBuffers(window);
+
 	}
 
 	ImGui_ImplOpenGL3_Shutdown();
@@ -291,3 +340,17 @@ int main()
 	glfwTerminate();
 	return 0;
 }
+
+
+
+
+
+
+
+
+/*
+Not Open Console Window
+ProjectProperty>Linker>system>subsystem set to Windows (/SUBSYSTEM:WINDOWS)
+ProjectProperty>Linker>Advance>mainCRTStartup
+
+*/
