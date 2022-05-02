@@ -3,6 +3,7 @@
 layout(location=0) in vec3 _Position;
 layout(location=1) in vec3 _Colors;
 layout(location=2) in vec2 _TexCoord;
+
 out vec3 colors;
 out vec2 texCoord;
 void main()
@@ -17,7 +18,6 @@ void main()
 in vec3 colors;
 in vec2 texCoord;
 
-uniform vec3 u_Color;
 uniform sampler2D texture1;
 
 void main()

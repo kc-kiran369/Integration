@@ -12,8 +12,10 @@
 
 #include<stb_image/stb_image.h>
 
-#include<glm/vec3.hpp>
-
+void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+{
+	glViewport(0, 0, width, height);
+}
 
 struct ShaderSource
 {
@@ -28,11 +30,9 @@ static ShaderSource ParseShader(const std::string& filePath) {
 	{
 		NONE = -1, VERTEX = 0, FRAGMENT = 1
 	};
-
 	std::string line;
 	std::stringstream ss[2];
 	ShaderType shaderType = ShaderType::NONE;
-
 	while (getline(stream, line)) {
 		if (line.find("#shader") != std::string::npos) {
 			if (line.find("vertex") != std::string::npos)
@@ -49,6 +49,7 @@ static ShaderSource ParseShader(const std::string& filePath) {
 			ss[(int)shaderType] << line << '\n';
 		}
 	}
+	stream.close();
 	return { ss[0].str() ,ss[1].str() };
 }
 
@@ -95,8 +96,15 @@ unsigned int CreateShader(std::string& _vertex_shader_, std::string& _fragment_s
 
 int main()
 {
+
+#pragma region Libraries Initialization
 	glfwInit();
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
 	GLFWwindow* window = glfwCreateWindow(800, 600, "Advance Graphics Engine v0.0.1", NULL, NULL);
+	glViewport(0, 0, 800, 600);
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwMakeContextCurrent(window);
 	glfwSwapInterval(1);
 
@@ -109,6 +117,9 @@ int main()
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 	io.FontDefault = io.Fonts->AddFontFromFileTTF("res/fonts/Tillana-Regular.ttf", 21.0f);
+#pragma endregion
+
+#pragma region Geometry
 
 	float vertices[] = {
 		//coordinate			//colors				//texture coordinate
@@ -142,6 +153,7 @@ int main()
 	//texture coordinate Attribute
 	glEnableVertexAttribArray(2);
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 8, (void*)(6 * sizeof(float)));
+
 	//texture
 	unsigned int texture1;
 	glGenTextures(1, &texture1);
@@ -153,7 +165,7 @@ int main()
 	//Load texture
 	int width, height, nChannels;
 	stbi_set_flip_vertically_on_load(true);
-	unsigned char* data = stbi_load("res/images/Doge.png", &width, &height, &nChannels, 0);
+	unsigned char* data = stbi_load("res/images/pic1.png", &width, &height, &nChannels, 0);
 	if (data)
 	{
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
@@ -163,6 +175,12 @@ int main()
 		std::cout << "Image not loaded" << std::endl;
 	}
 	stbi_image_free(data);
+
+	ShaderSource shaderSource = ParseShader("src/shaders/shader.glsl");
+
+	unsigned int program = CreateShader(shaderSource.VertexSource, shaderSource.FragmentSource);
+	glUseProgram(program);
+#pragma endregion
 
 #pragma region FrameBuffer
 	/*
@@ -186,23 +204,14 @@ int main()
 	*/
 #pragma endregion
 
-	ShaderSource shaderSource = ParseShader("src/shaders/shader.shad");
-
-	unsigned int program = CreateShader(shaderSource.VertexSource, shaderSource.FragmentSource);
-	glUseProgram(program);
-
-	int location = glGetUniformLocation(program, "u_Color");
-	glUniform3f(location, 0.1f, 0.1f, 0.1f);
-
-	bool draw = true;
-	bool dockOverViewport = true;
-	float triangleColor[3] = { 1.0f,1.0f, 1.0f };
-	float backgroundColor[3] = { 25.0f / 255.0f,25.0f / 255.0f, 25.0f / 255.0f };
+#pragma region VariablesBeforeMainLoop
+	bool draw = false, dockOverViewport = true;
+#pragma endregion
 
 	while (!glfwWindowShouldClose(window))
 	{
 		glClear(GL_COLOR_BUFFER_BIT);
-		glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], 1.0f);
+
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texture1);
@@ -213,11 +222,6 @@ int main()
 
 		if (dockOverViewport)
 			ImGui::DockSpaceOverViewport();
-		if (draw)
-		{
-			glUniform3f(location, triangleColor[0], triangleColor[1], triangleColor[2]);
-			glDrawElements(GL_POLYGON, 4, GL_UNSIGNED_INT, nullptr);
-		}
 
 		if (ImGui::BeginMainMenuBar())
 		{
@@ -261,9 +265,7 @@ int main()
 			}
 			ImGui::EndMainMenuBar();
 		}
-		
 
-		
 		ImGui::Begin("Viewport");
 		ImVec2 viewSize = ImGui::GetContentRegionAvail();
 		ImGui::Text("X : %f\nY : %f", viewSize.x, viewSize.y);
@@ -303,11 +305,6 @@ int main()
 		}
 		ImGui::End();
 
-		ImGui::Begin("Property");
-		ImGui::ColorEdit3("Triangle Color", triangleColor);
-		ImGui::ColorEdit3("Background Color", backgroundColor);
-		ImGui::End();
-
 		ImGui::Begin("Statistics");
 		ImGui::Text("Manufacturer : %s", glGetString(GL_VENDOR));
 		ImGui::Text("Renderer : %s", glGetString(GL_RENDERER));
@@ -324,8 +321,9 @@ int main()
 		ImGui::Checkbox("Render", &draw);
 		ImGui::Checkbox("Dockspace over viewport", &dockOverViewport);
 		ImGui::End();
-		
 
+		if (draw)
+			glDrawElements(GL_POLYGON, 4, GL_UNSIGNED_INT, nullptr);
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		glfwPollEvents();
@@ -333,18 +331,15 @@ int main()
 
 	}
 
+#pragma region CleaningUp
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
-
 	glfwTerminate();
+#pragma endregion
+
 	return 0;
 }
-
-
-
-
-
 
 
 
@@ -352,5 +347,4 @@ int main()
 Not Open Console Window
 ProjectProperty>Linker>system>subsystem set to Windows (/SUBSYSTEM:WINDOWS)
 ProjectProperty>Linker>Advance>mainCRTStartup
-
 */
