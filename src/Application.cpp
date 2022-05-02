@@ -12,6 +12,8 @@
 
 #include<stb_image/stb_image.h>
 
+#include"VertexBuffer.h"
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
@@ -132,6 +134,8 @@ int main()
 	int indices[] = {
 		0,1,2,3
 	};
+
+	VertexBuffer vertexBufferObject();
 
 	unsigned int vertexBuffer;
 	glGenBuffers(1, &vertexBuffer);
