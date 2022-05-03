@@ -13,6 +13,7 @@
 #include<stb_image/stb_image.h>
 
 #include"VertexBuffer.h"
+#include"IndexBuffer.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -131,21 +132,13 @@ int main()
 		-0.5f,-0.5f, 0.0f,		0.0f, 0.0f,	1.0f,		0.0f, 0.0f
 	};
 
-	int indices[] = {
+	unsigned int indices[] = {
 		0,1,2,3
 	};
 
-	VertexBuffer vertexBufferObject();
+	VertexBuffer VBO(vertices, sizeof(float) * 4 * 8);
 
-	unsigned int vertexBuffer;
-	glGenBuffers(1, &vertexBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8 * 4, vertices, GL_STATIC_DRAW);
-
-	unsigned int indexBuffer;
-	glGenBuffers(1, &indexBuffer);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * 4, indices, GL_STATIC_DRAW);
+	IndexBuffer IBO(indices, 4);
 
 	//Attribute pointer
 	//position attribute
@@ -186,30 +179,8 @@ int main()
 	glUseProgram(program);
 #pragma endregion
 
-#pragma region FrameBuffer
-	/*
-	unsigned int frameBuffer;
-	glGenBuffers(1, &frameBuffer);
-	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
-
-	unsigned int frameBufferTexture;
-	glGenBuffers(1, &frameBufferTexture);
-	glBindTexture(GL_FRAMEBUFFER, frameBufferTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-	unsigned int renderBuffer;
-	glGenBuffers(1, &renderBuffer);
-	glBindRenderbuffer(GL_RENDERBUFFER, renderBuffer);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
-	*/
-#pragma endregion
-
 #pragma region VariablesBeforeMainLoop
-	bool draw = false, dockOverViewport = true;
+	bool draw = true, dockOverViewport = false;
 #pragma endregion
 
 	while (!glfwWindowShouldClose(window))
