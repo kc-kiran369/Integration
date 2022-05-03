@@ -187,7 +187,6 @@ int main()
 	{
 		glClear(GL_COLOR_BUFFER_BIT);
 
-
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texture1);
 
@@ -213,6 +212,11 @@ int main()
 
 			if (ImGui::BeginMenu("Window"))
 			{
+				ImGui::MenuItem("Item 1");
+				ImGui::MenuItem("Item 2");
+				ImGui::MenuItem("Item 3");
+				ImGui::MenuItem("Item 4");
+				ImGui::MenuItem("Item 5");
 				ImGui::EndMenu();
 			}
 
@@ -227,9 +231,11 @@ int main()
 			}
 
 			if (ImGui::BeginMenu("View")) {
-
-
-
+				ImGui::MenuItem("Item 1");
+				ImGui::MenuItem("Item 2");
+				ImGui::MenuItem("Item 3");
+				ImGui::MenuItem("Item 4");
+				ImGui::MenuItem("Item 5");
 				ImGui::EndMenu();
 			}
 
