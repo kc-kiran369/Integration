@@ -99,7 +99,6 @@ unsigned int CreateShader(std::string& _vertex_shader_, std::string& _fragment_s
 
 int main()
 {
-
 #pragma region Libraries Initialization
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -123,13 +122,12 @@ int main()
 #pragma endregion
 
 #pragma region Geometry
-
 	float vertices[] = {
 		//coordinate			//colors				//texture coordinate
-		-0.5f, 0.5f, 1.0f,		1.0f, 0.0f,	0.0f,		0.0f, 1.0f,
-		 0.5f, 0.5f, 0.0f,		1.0f, 0.0f,	0.0f,		1.0f, 1.0f,
-		 0.5f,-0.5f, 1.0f,		0.0f, 0.0f,	1.0f,		1.0f, 0.0f,
-		-0.5f,-0.5f, 0.0f,		0.0f, 0.0f,	1.0f,		0.0f, 0.0f
+	   -0.5f, 0.5f, 1.0f,		1.0f, 0.0f,	0.0f,		0.0f, 1.0f,
+		0.5f, 0.5f, 0.0f,		1.0f, 0.0f,	0.0f,		1.0f, 1.0f,
+		0.5f,-0.5f, 1.0f,		0.0f, 0.0f,	1.0f,		1.0f, 0.0f,
+	   -0.5f,-0.5f, 0.0f,		0.0f, 0.0f,	1.0f,		0.0f, 0.0f
 	};
 
 	unsigned int indices[] = {
@@ -140,7 +138,6 @@ int main()
 
 	IndexBuffer IBO(indices, 4);
 
-	//Attribute pointer
 	//position attribute
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 8, 0);
@@ -150,7 +147,9 @@ int main()
 	//texture coordinate Attribute
 	glEnableVertexAttribArray(2);
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 8, (void*)(6 * sizeof(float)));
+#pragma endregion
 
+#pragma region MyRegion
 	//texture
 	unsigned int texture1;
 	glGenTextures(1, &texture1);
@@ -159,9 +158,10 @@ int main()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
 	//Load texture
 	int width, height, nChannels;
-	stbi_set_flip_vertically_on_load(true);
+	stbi_set_flip_vertically_on_load(false);
 	unsigned char* data = stbi_load("res/images/pic1.png", &width, &height, &nChannels, 0);
 	if (data)
 	{
@@ -173,22 +173,22 @@ int main()
 	}
 	stbi_image_free(data);
 
+	glActiveTexture(GL_TEXTURE0);
+#pragma endregion
+
 	ShaderSource shaderSource = ParseShader("src/shaders/shader.glsl");
 
 	unsigned int program = CreateShader(shaderSource.VertexSource, shaderSource.FragmentSource);
 	glUseProgram(program);
-#pragma endregion
 
 #pragma region VariablesBeforeMainLoop
-	bool draw = true, dockOverViewport = false;
+	bool draw = true, dockOverViewport = true;
 #pragma endregion
 
+#pragma region MainLoop
 	while (!glfwWindowShouldClose(window))
 	{
 		glClear(GL_COLOR_BUFFER_BIT);
-
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture1);
 
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
@@ -210,13 +210,12 @@ int main()
 				ImGui::EndMenu();
 			}
 
+
 			if (ImGui::BeginMenu("Window"))
 			{
-				ImGui::MenuItem("Item 1");
-				ImGui::MenuItem("Item 2");
-				ImGui::MenuItem("Item 3");
-				ImGui::MenuItem("Item 4");
-				ImGui::MenuItem("Item 5");
+				if (ImGui::MenuItem("Demo Window"))
+				{
+				}
 				ImGui::EndMenu();
 			}
 
@@ -227,15 +226,6 @@ int main()
 					ImGui::StyleColorsDark();
 				if (ImGui::MenuItem("Classic"))
 					ImGui::StyleColorsClassic();
-				ImGui::EndMenu();
-			}
-
-			if (ImGui::BeginMenu("View")) {
-				ImGui::MenuItem("Item 1");
-				ImGui::MenuItem("Item 2");
-				ImGui::MenuItem("Item 3");
-				ImGui::MenuItem("Item 4");
-				ImGui::MenuItem("Item 5");
 				ImGui::EndMenu();
 			}
 
@@ -250,6 +240,10 @@ int main()
 		ImGui::Begin("Viewport");
 		ImVec2 viewSize = ImGui::GetContentRegionAvail();
 		ImGui::Text("X : %f\nY : %f", viewSize.x, viewSize.y);
+		stbi_set_flip_vertically_on_load(true);
+		ImGui::Image((void*)texture1, ImVec2{ viewSize.x ,viewSize.y });
+		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		//glEnable(GL_DEPTH_TEST);
 		ImGui::End();
 
 		ImGui::Begin("Add Menu");
@@ -305,12 +299,14 @@ int main()
 
 		if (draw)
 			glDrawElements(GL_POLYGON, 4, GL_UNSIGNED_INT, nullptr);
+
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		glfwPollEvents();
 		glfwSwapBuffers(window);
 
 	}
+#pragma endregion
 
 #pragma region CleaningUp
 	ImGui_ImplOpenGL3_Shutdown();
@@ -320,7 +316,6 @@ int main()
 #pragma endregion
 
 	return 0;
-
 }
 
 
