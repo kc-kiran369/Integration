@@ -118,7 +118,7 @@ int main()
 	ImGui::StyleColorsDark();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-	io.FontDefault = io.Fonts->AddFontFromFileTTF("res/fonts/Tillana-Regular.ttf", 21.0f);
+	io.FontDefault = io.Fonts->AddFontFromFileTTF("res/fonts/Mohave-Regular.ttf", 21.0f);
 #pragma endregion
 
 #pragma region Geometry
@@ -149,7 +149,7 @@ int main()
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 8, (void*)(6 * sizeof(float)));
 #pragma endregion
 
-#pragma region MyRegion
+#pragma region Texture
 	//texture
 	unsigned int texture1;
 	glGenTextures(1, &texture1);
@@ -162,7 +162,7 @@ int main()
 	//Load texture
 	int width, height, nChannels;
 	stbi_set_flip_vertically_on_load(false);
-	unsigned char* data = stbi_load("res/images/pic1.png", &width, &height, &nChannels, 0);
+	unsigned char* data = stbi_load("res/images/pic2.png", &width, &height, &nChannels, 0);
 	if (data)
 	{
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
@@ -177,12 +177,32 @@ int main()
 #pragma endregion
 
 	ShaderSource shaderSource = ParseShader("src/shaders/shader.glsl");
-
 	unsigned int program = CreateShader(shaderSource.VertexSource, shaderSource.FragmentSource);
 	glUseProgram(program);
 
+#pragma region RBO
+	/*unsigned int frameBuffer;
+	glGenFramebuffers(1, &frameBuffer);
+
+	unsigned int colorBufferTexture;
+	glGenTextures(1, &colorBufferTexture);
+	glBindTexture(GL_TEXTURE_2D, colorBufferTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 800, 800, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+	unsigned int renderBuffer;
+	glGenRenderbuffers(1, &renderBuffer);
+	glBindRenderbuffer(GL_RENDERBUFFER, renderBuffer);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 800, 800);
+
+	glBindRenderbuffer(GL_RENDERBUFFER, renderBuffer);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorBufferTexture, 0);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderBuffer);*/
+#pragma endregion
+
 #pragma region VariablesBeforeMainLoop
-	bool draw = true, dockOverViewport = true;
+	bool draw = false, dockOverViewport = true;
 #pragma endregion
 
 #pragma region MainLoop
@@ -213,9 +233,7 @@ int main()
 
 			if (ImGui::BeginMenu("Window"))
 			{
-				if (ImGui::MenuItem("Demo Window"))
-				{
-				}
+				if (ImGui::MenuItem("Demo Window"));
 				ImGui::EndMenu();
 			}
 
@@ -237,48 +255,13 @@ int main()
 			ImGui::EndMainMenuBar();
 		}
 
+#pragma region ViewPort
 		ImGui::Begin("Viewport");
 		ImVec2 viewSize = ImGui::GetContentRegionAvail();
-		ImGui::Text("X : %f\nY : %f", viewSize.x, viewSize.y);
-		stbi_set_flip_vertically_on_load(true);
+		//ImGui::Text("X : %f\nY : %f", viewSize.x, viewSize.y);
 		ImGui::Image((void*)texture1, ImVec2{ viewSize.x ,viewSize.y });
-		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		//glEnable(GL_DEPTH_TEST);
 		ImGui::End();
-
-		ImGui::Begin("Add Menu");
-		if (ImGui::BeginMenu("Mesh"))
-		{
-			ImGui::MenuItem("Plane");
-			ImGui::MenuItem("Cube");
-			ImGui::MenuItem("Cylinder");
-			ImGui::MenuItem("Sphere");
-			ImGui::EndMenu();
-		}
-		if (ImGui::BeginMenu("Curve"))
-		{
-			ImGui::MenuItem("Bezier");
-			ImGui::MenuItem("Circle");
-			ImGui::MenuItem("Path");
-			ImGui::EndMenu();
-		}
-		if (ImGui::BeginMenu("Light"))
-		{
-			ImGui::MenuItem("Point");
-			ImGui::MenuItem("Directional");
-			ImGui::MenuItem("Spot");
-			ImGui::MenuItem("Area");
-			ImGui::EndMenu();
-		}
-		if (ImGui::BeginMenu("Armature"))
-		{
-			ImGui::MenuItem("Human");
-			ImGui::MenuItem("Single");
-			ImGui::MenuItem("Basic");
-			ImGui::MenuItem("Animals");
-			ImGui::EndMenu();
-		}
-		ImGui::End();
+#pragma endregion
 
 		ImGui::Begin("Statistics");
 		ImGui::Text("Manufacturer : %s", glGetString(GL_VENDOR));
