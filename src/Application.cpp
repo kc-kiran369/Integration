@@ -230,7 +230,6 @@ int main()
 				ImGui::EndMenu();
 			}
 
-
 			if (ImGui::BeginMenu("Window"))
 			{
 				if (ImGui::MenuItem("Demo Window"));
@@ -258,7 +257,6 @@ int main()
 #pragma region ViewPort
 		ImGui::Begin("Viewport");
 		ImVec2 viewSize = ImGui::GetContentRegionAvail();
-		//ImGui::Text("X : %f\nY : %f", viewSize.x, viewSize.y);
 		ImGui::Image((void*)texture1, ImVec2{ viewSize.x ,viewSize.y });
 		ImGui::End();
 #pragma endregion
@@ -277,7 +275,7 @@ int main()
 
 		ImGui::Begin("Scene");
 		ImGui::Checkbox("Render", &draw);
-		ImGui::Checkbox("Dockspace over viewport", &dockOverViewport);
+		ImGui::Checkbox("Dock space over viewport", &dockOverViewport);
 		ImGui::End();
 
 		if (draw)
